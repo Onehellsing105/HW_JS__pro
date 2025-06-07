@@ -45,16 +45,25 @@
   const addButton = document.querySelector('.add-form-button');
   const commentsList = document.getElementById('comments-list');
 
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function renderComments() {
     commentsList.innerHTML = comments.map(comment => `
       <li class="comment" data-id="${comment.id}">
         <div class="comment-header">
-          <div>${comment.name}</div>
+          <div>${escapeHtml(comment.name)}</div>
           <div>${comment.date}</div>
         </div>
         <div class="comment-body">
           <div class="comment-text">
-            ${comment.text}
+            ${escapeHtml(comment.text).replace(/\n/g, '<br>')}
           </div>
         </div>
         <div class="comment-footer">
@@ -67,9 +76,28 @@
     `).join('');
   }
 
+  function handleCommentClick(event) {
+    if (event.target.closest('.like-button')) {
+      return;
+    }
+    
+    const commentElement = event.target.closest('.comment');
+    if (!commentElement) return;
+    
+    const commentId = parseInt(commentElement.dataset.id);
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+    
+    nameInput.value = escapeHtml(comment.name);
+    textInput.value = escapeHtml(comment.text);
+    textInput.focus();
+  }
+
   function handleLikeClick(event) {
     const likeButton = event.target.closest('.like-button');
     if (!likeButton) return;
+    
+    event.stopPropagation();
     
     const commentElement = likeButton.closest('.comment');
     const commentId = parseInt(commentElement.dataset.id);
@@ -78,7 +106,6 @@
     if (comment) {
       comment.isLiked = !comment.isLiked;
       comment.likes += comment.isLiked ? 1 : -1;
-      
       renderComments();
     }
   }
@@ -92,11 +119,14 @@
       return;
     }
     
+    const safeName = escapeHtml(name);
+    const safeText = escapeHtml(text);
+  
     const newComment = {
       id: Date.now(), 
-      name: name,
+      name: safeName,
       date: formatDate(new Date()),
-      text: text,
+      text: safeText,
       likes: 0,
       isLiked: false
     };
@@ -125,6 +155,7 @@
   }
 
   renderComments();
+  commentsList.addEventListener('click', handleCommentClick);
   commentsList.addEventListener('click', handleLikeClick);
   addButton.addEventListener('click', addComment);
   textInput.addEventListener('keydown', (e) => {
