@@ -58,12 +58,12 @@
     commentsList.innerHTML = comments.map(comment => `
       <li class="comment" data-id="${comment.id}">
         <div class="comment-header">
-          <div>${escapeHtml(comment.name)}</div>
+          <div>${comment.name}</div>
           <div>${comment.date}</div>
         </div>
         <div class="comment-body">
           <div class="comment-text">
-            ${escapeHtml(comment.text).replace(/\n/g, '<br>')}
+            ${comment.text.replace(/\n/g, '<br>')}
           </div>
         </div>
         <div class="comment-footer">
@@ -74,59 +74,47 @@
         </div>
       </li>
     `).join('');
-  }
 
-  function handleCommentClick(event) {
-    if (event.target.closest('.like-button')) {
-      return;
-    }
-    
-    const commentElement = event.target.closest('.comment');
-    if (!commentElement) return;
-    
-    const commentId = parseInt(commentElement.dataset.id);
-    const comment = comments.find(c => c.id === commentId);
-    if (!comment) return;
-    
-    nameInput.value = escapeHtml(comment.name);
-    textInput.value = escapeHtml(comment.text);
-    textInput.focus();
-  }
+    document.querySelectorAll('.like-button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const commentId = parseInt(button.closest('.comment').dataset.id);
+        const comment = comments.find(c => c.id === commentId);
+        if (comment) {
+          comment.isLiked = !comment.isLiked;
+          comment.likes += comment.isLiked ? 1 : -1;
+          renderComments();
+        }
+      });
+    });
 
-  function handleLikeClick(event) {
-    const likeButton = event.target.closest('.like-button');
-    if (!likeButton) return;
-    
-    event.stopPropagation();
-    
-    const commentElement = likeButton.closest('.comment');
-    const commentId = parseInt(commentElement.dataset.id);
-    
-    const comment = comments.find(c => c.id === commentId);
-    if (comment) {
-      comment.isLiked = !comment.isLiked;
-      comment.likes += comment.isLiked ? 1 : -1;
-      renderComments();
-    }
+    document.querySelectorAll('.comment').forEach(comment => {
+      comment.addEventListener('click', () => {
+        const commentId = parseInt(comment.dataset.id);
+        const clickedComment = comments.find(c => c.id === commentId);
+        if (clickedComment) {
+          nameInput.value = clickedComment.name;
+          textInput.value = clickedComment.text;
+          textInput.focus();
+        }
+      });
+    });
   }
 
   function addComment() {
-    const name = nameInput.value.trim();
-    const text = textInput.value.trim();
+    const name = escapeHtml(nameInput.value.trim());
+    const text = escapeHtml(textInput.value.trim());
     
     if (!name || !text) {
       alert('Пожалуйста, заполните все поля');
       return;
     }
     
-    const safeName = escapeHtml(name);
-    const safeText = escapeHtml(text);
-  
     const newComment = {
       id: Date.now(), 
-      name: safeName,
+      name: name,
       date: formatDate(new Date()),
-      text: safeText,
+      text: text,
       likes: 0,
       isLiked: false
     };
@@ -154,16 +142,19 @@
     addButton.disabled = !nameInput.value.trim() || !textInput.value.trim();
   }
 
-  renderComments();
-  commentsList.addEventListener('click', handleCommentClick);
-  commentsList.addEventListener('click', handleLikeClick);
-  addButton.addEventListener('click', addComment);
-  textInput.addEventListener('keydown', (e) => {
+  function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
+      if (!nameInput.value.trim() || !textInput.value.trim()) {
+        return;
+      }
       e.preventDefault();
       addComment();
     }
-  });
+  }
+
+  renderComments();
+  addButton.addEventListener('click', addComment);
+  textInput.addEventListener('keydown', handleKeyDown);
   nameInput.addEventListener('input', updateButtonState);
   textInput.addEventListener('input', updateButtonState);
   addButton.disabled = true;
