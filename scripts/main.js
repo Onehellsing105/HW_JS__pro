@@ -1,9 +1,11 @@
-import { renderComments } from './modules/render.js';
+import { initCommentsData, comments } from './modules/commentsData.js';
 import { initHandlers } from './modules/handlers.js';
-import { comments } from './modules/commentsData.js';
+import { renderComments } from './modules/render.js';
 
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
+async function initApp() {
+  await initCommentsData();
   renderComments(comments);
   initHandlers();
-});
+}
+
+initApp();

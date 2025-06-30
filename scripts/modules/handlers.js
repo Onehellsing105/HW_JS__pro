@@ -1,14 +1,13 @@
 import { comments } from './commentsData.js';
 import { renderComments } from './render.js';
 import { escapeHtml } from './escapeHtml.js';
-import { formatDate } from './utils.js';
+import { postCommentToAPI } from './api.js';
 
 export function initHandlers() {
   const nameInput = document.querySelector('.add-form-name');
   const textInput = document.querySelector('.add-form-text');
   const addButton = document.querySelector('.add-form-button');
 
-  // Делегирование обработки лайков
   document.getElementById('comments-list').addEventListener('click', (event) => {
     const likeButton = event.target.closest('.like-button');
     if (likeButton) {
@@ -30,7 +29,7 @@ export function initHandlers() {
   addButton.disabled = true;
 
   function handleLikeClick(button) {
-    const commentId = parseInt(button.closest('.comment').dataset.id);
+    const commentId = button.closest('.comment').dataset.id;
     const comment = comments.find(c => c.id === commentId);
     
     if (comment) {
@@ -42,36 +41,42 @@ export function initHandlers() {
   }
 
   function handleCommentClick(commentElement) {
-    const commentId = parseInt(commentElement.dataset.id);
-    const comment = comments.find(c => c.id === commentId);
-    
+   const commentId = button.closest('.comment').dataset.id;
+   const comment = comments.find(c => c.id === commentId);
+
     nameInput.value = comment.name;
     textInput.value = comment.text;
     textInput.focus();
   }
 
-  function addComment() {
+  async function addComment() {
     const name = escapeHtml(nameInput.value.trim());
     const text = escapeHtml(textInput.value.trim());
-    
+
     if (!name || !text) {
       alert('Заполните все поля');
       return;
     }
-    
-    comments.push({
-      id: Date.now(),
-      name,
-      date: new Date(),
-      text,
-      likes: 0,
-      isLiked: false
-    });
-    
-    renderComments(comments);
-    nameInput.value = '';
-    textInput.value = '';
-    addButton.disabled = true;
+
+    try {
+      const saved = await postCommentToAPI({ name, text });
+
+      comments.push({
+        id: saved.id,
+        name: saved.name,
+        date: new Date(saved.date),
+        text: saved.text,
+        likes: 0,
+        isLiked: false
+      });
+
+      renderComments(comments);
+      nameInput.value = '';
+      textInput.value = '';
+      addButton.disabled = true;
+    } catch (error) {
+      alert('Ошибка при отправке комментария');
+    }
   }
 
   function handleKeyDown(e) {
