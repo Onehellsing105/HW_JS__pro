@@ -29,7 +29,7 @@ export function initHandlers() {
   addButton.disabled = true;
 
   function handleLikeClick(button) {
-    const commentId = parseInt(button.closest('.comment').dataset.id);
+    const commentId = button.closest('.comment').dataset.id;
     const comment = comments.find(c => c.id === commentId);
     
     if (comment) {
@@ -41,8 +41,8 @@ export function initHandlers() {
   }
 
   function handleCommentClick(commentElement) {
-    const commentId = parseInt(commentElement.dataset.id);
-    const comment = comments.find(c => c.id === commentId);
+   const commentId = button.closest('.comment').dataset.id;
+   const comment = comments.find(c => c.id === commentId);
 
     nameInput.value = comment.name;
     textInput.value = comment.text;
