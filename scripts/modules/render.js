@@ -2,7 +2,7 @@ import { formatDate } from './utils.js';
 
 export function renderComments(comments) {
   const commentsList = document.getElementById('comments-list');
-  
+
   commentsList.innerHTML = comments.map(comment => `
     <li class="comment" data-id="${comment.id}">
       <div class="comment-header">
