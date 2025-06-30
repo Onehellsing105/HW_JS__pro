@@ -1,0 +1,33 @@
+{
+  "scripts": {
+  "lint": "eslint scripts/**/*.js",
+  "lint:fix": "eslint scripts/**/*.js --fix",
+  "format": "prettier --write scripts/**/*.js"
+}
+
+  "name": "hw_js__pro",
+  "version": "1.0.0",
+  "description": "https://glebkaf.github.io/webdev-dom-homework/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Onehellsing105/HW_JS__pro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Onehellsing105/HW_JS__pro/issues"
+  },
+  "homepage": "https://github.com/Onehellsing105/HW_JS__pro#readme",
+  "devDependencies": {
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.31.0",
+    "prettier": "^3.5.3"
+  },
+}
+
