@@ -157,6 +157,12 @@ body {
   justify-content: center;
   z-index: 1000;
   color: white;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.loader.show {
+  opacity: 1;
 }
 
 .loader-spinner {

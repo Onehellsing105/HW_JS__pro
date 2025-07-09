@@ -2,9 +2,10 @@ import { getCommentsFromAPI } from './modules/api.js';
 import { renderComments } from './modules/render.js';
 import { showNotification } from './modules/notifications.js'; 
 import { comments } from './modules/commentsData.js';
+import { initHandlers } from './modules/handlers.js';
 
 export async function loadComments() {
-  const loadingNotification = showNotification(
+  let  loadingNotification = showNotification(
     'Загружаем комментарии... Пожалуйста, подождите',
     'warning',
     0
@@ -16,7 +17,7 @@ const delayBeforeNotice = setTimeout(() => {
       'warning',
       0
     );
-  }, 1500); // показываем только если прошло больше 1.5 секунды
+  }, 1500); 
 
   const slowNetworkTimer = setTimeout(() => {
     showNotification('Интернет медленный… Ожидаем загрузку', 'warning');
@@ -34,13 +35,10 @@ const delayBeforeNotice = setTimeout(() => {
     clearTimeout(slowNetworkTimer);
 
     if (loadingNotification) {
-      loadingNotification.classList.remove('warning');
-      loadingNotification.classList.add('visible');
+      showNotification('Комментарии успешно загружены!', 'success');
+      comments.splice(0, comments.length, ...response);
+      renderComments(comments);
     }
-
-    showNotification('Комментарии успешно загружены!', 'success');
-    comments.splice(0, comments.length, ...response);
-    renderComments(comments);
     
   } catch (error) {
     clearTimeout(delayBeforeNotice);
@@ -53,13 +51,20 @@ const delayBeforeNotice = setTimeout(() => {
 
   } finally {
     if (loadingNotification) {
-      loadingNotification.classList.remove('visible');
-      setTimeout(() => loadingNotification.remove(), 300);
+      setTimeout(() => {
+        loadingNotification.classList.remove('visible');
+        loadingNotification.remove();
+      }, 300);
     }
   }
 }
 
-import { initHandlers } from './modules/handlers.js';
-
-await loadComments();     
-initHandlers();           
+(async function initApp() {
+  try {
+    await loadComments();
+    initHandlers();
+  } catch (error) {
+    console.error('Ошибка инициализации приложения:', error);
+    showNotification('Не удалось загрузить приложение', 'error');
+  }
+})();        
