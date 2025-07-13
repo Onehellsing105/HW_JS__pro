@@ -6,6 +6,11 @@ import { showNotification } from './notifications.js';
 
 const COMMENT_DELAY_MS = 2000;
 
+let formState = {
+  name: '',
+  text: ''
+};
+
 export function initHandlers() {
   const nameInput = document.querySelector('.add-form-name');
   const textInput = document.querySelector('.add-form-text');
@@ -17,6 +22,19 @@ export function initHandlers() {
     return;
   }
 
+  nameInput.addEventListener('input', (e) => {
+    formState.name = e.target.value;
+    updateButtonState();
+  });
+
+  textInput.addEventListener('input', (e) => {
+    formState.text = e.target.value;
+    updateButtonState();
+  });
+
+  nameInput.value = formState.name;
+  textInput.value = formState.text;
+
   function setupEventListeners() {
     const commentsList = document.getElementById('comments-list');
     if (!commentsList) {
@@ -27,8 +45,6 @@ export function initHandlers() {
     commentsList.addEventListener('click', handleListClick);
     addButton.addEventListener('click', handleAddComment);
     textInput.addEventListener('keydown', handleTextInputKeyDown);
-    nameInput.addEventListener('input', updateButtonState);
-    textInput.addEventListener('input', updateButtonState);
   }
 
   function handleListClick(event) {
@@ -51,7 +67,7 @@ export function initHandlers() {
 
     const commentId = comment.dataset.id;
     const commentData = comments.find(c => c.id === commentId);
-    
+
     if (commentData) {
       commentData.isLiked = !commentData.isLiked;
       commentData.likes += commentData.isLiked ? 1 : -1;
@@ -73,15 +89,15 @@ export function initHandlers() {
 
     if (comment && textInput) {
       const quotedText = `> ${comment.name} писал(а):\n> ${comment.text}\n\n`;
-      
+
       const currentValue = textInput.value;
-      const selectionStart = textInput.selectionStart;
-      const selectionEnd = textInput.selectionEnd;
-      
-      textInput.value = currentValue.slice(0, selectionStart) + 
-                       quotedText + 
-                       currentValue.slice(selectionEnd);
-      
+      const selectionStart = textInput.selectionStart ?? 0;
+      const selectionEnd = textInput.selectionEnd ?? 0;
+
+      textInput.value = currentValue.slice(0, selectionStart) +
+                        quotedText +
+                        currentValue.slice(selectionEnd);
+
       const newCursorPos = selectionStart + quotedText.length;
       textInput.setSelectionRange(newCursorPos, newCursorPos);
       textInput.focus();
@@ -91,8 +107,8 @@ export function initHandlers() {
   async function handleAddComment() {
     if (isSubmitting) return;
 
-    const name = escapeHtml(nameInput.value.trim());
-    const text = escapeHtml(textInput.value.trim());
+    const name = escapeHtml(formState.name.trim());
+    const text = escapeHtml(formState.text.trim());
 
     if (!validateInput(name, text)) return;
 
@@ -109,9 +125,9 @@ export function initHandlers() {
     }, 3000);
 
     try {
-      await postCommentToAPI({ name, text });
+      await postCommentToAPI({ name, text, forceError: Math.random() > 0.5 });
       const updatedComments = await getCommentsFromAPI();
-      
+
       comments.length = 0;
       if (Array.isArray(updatedComments)) {
         updatedComments.forEach(comment => {
@@ -123,55 +139,56 @@ export function initHandlers() {
             likes: comment.likes || 0,
             isLiked: comment.isLiked || false
           });
-      });
+        });
+      }
+
+      formState = { name: '', text: '' };
+      nameInput.value = '';
+      textInput.value = '';
+
+      showNotification('Комментарий успешно опубликован!', 'success');
+      renderComments(comments);
+
+    } catch (error) {
+      console.error('Ошибка при добавлении комментария:', error);
+      showNotification(error.message || 'Ошибка при отправке комментария', 'error');
+
+      nameInput.value = formState.name;
+      textInput.value = formState.text;
+
+    } finally {
+      clearTimeout(slowNetworkTimer);
+      pendingNotice?.remove();
+
+      setTimeout(() => {
+        isSubmitting = false;
+        updateButtonState();
+        formElement.classList.remove('hidden');
+      }, COMMENT_DELAY_MS);
     }
-
-    clearTimeout(slowNetworkTimer);
-    pendingNotice?.remove();
-    showNotification('Комментарий успешно опубликован!', 'success');
-
-  renderComments(comments);
-    resetForm();
-  } catch (error) {
-    console.error('Ошибка при добавлении комментария:', error);
-    clearTimeout(slowNetworkTimer);
-    pendingNotice?.remove();
-    showNotification(error.message || 'Ошибка при отправке комментария', 'error');
-  } finally {
-    setTimeout(() => {
-      isSubmitting = false;
-      updateButtonState();
-      formElement.classList.remove('hidden');
-    }, COMMENT_DELAY_MS);
   }
-}
 
   function validateInput(name, text) {
-  if (!name || !text) {
-    showNotification('Заполните все поля', 'error');
-    return false;
-  }
-  return true;
-  }
-
-  function resetForm() {
-    if (nameInput) nameInput.value = '';
-    if (textInput) textInput.value = '';
+    if (!name || !text || name.length < 3 || text.length < 3) {
+      showNotification('Имя и текст должны содержать минимум 3 символа', 'error');
+      return false;
+    }
+    return true;
   }
 
   function handleTextInputKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey && 
-        nameInput?.value.trim() && textInput?.value.trim()) {
+    if (e.key === 'Enter' && !e.shiftKey &&
+        formState.name.trim().length >= 3 &&
+        formState.text.trim().length >= 3) {
       e.preventDefault();
       handleAddComment();
     }
   }
 
   function updateButtonState() {
-    if (!addButton) return;
-    addButton.disabled = isSubmitting || 
-                        !nameInput?.value.trim() || 
-                        !textInput?.value.trim();
+    addButton.disabled = isSubmitting ||
+                         formState.name.trim().length < 3 ||
+                         formState.text.trim().length < 3;
   }
 
   setupEventListeners();

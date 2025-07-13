@@ -1,23 +1,23 @@
 import { getCommentsFromAPI } from './modules/api.js';
 import { renderComments } from './modules/render.js';
-import { showNotification } from './modules/notifications.js'; 
+import { showNotification } from './modules/notifications.js';
 import { comments } from './modules/commentsData.js';
 import { initHandlers } from './modules/handlers.js';
 
-export async function loadComments() {
-  let  loadingNotification = showNotification(
+async function loadComments() {
+  let loadingNotification = showNotification(
     'Загружаем комментарии... Пожалуйста, подождите',
     'warning',
     0
   );
 
-const delayBeforeNotice = setTimeout(() => {
+  const delayBeforeNotice = setTimeout(() => {
     loadingNotification = showNotification(
       'Загружаем комментарии... Пожалуйста, подождите',
       'warning',
       0
     );
-  }, 1500); 
+  }, 1500);
 
   const slowNetworkTimer = setTimeout(() => {
     showNotification('Интернет медленный… Ожидаем загрузку', 'warning');
@@ -39,7 +39,7 @@ const delayBeforeNotice = setTimeout(() => {
       comments.splice(0, comments.length, ...response);
       renderComments(comments);
     }
-    
+
   } catch (error) {
     clearTimeout(delayBeforeNotice);
     clearTimeout(slowNetworkTimer);
@@ -59,7 +59,7 @@ const delayBeforeNotice = setTimeout(() => {
   }
 }
 
-(async function initApp() {
+async function initApp() {
   try {
     await loadComments();
     initHandlers();
@@ -67,4 +67,14 @@ const delayBeforeNotice = setTimeout(() => {
     console.error('Ошибка инициализации приложения:', error);
     showNotification('Не удалось загрузить приложение', 'error');
   }
-})();        
+}
+
+window.addEventListener('offline', () => {
+  alert("Вы offline. Комментарии будут сохранены при восстановлении связи.");
+});
+
+window.addEventListener('online', () => {
+  console.log("Соединение восстановлено");
+});
+
+document.addEventListener('DOMContentLoaded', initApp);

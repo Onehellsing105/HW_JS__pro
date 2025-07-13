@@ -14,7 +14,6 @@ export async function getCommentsFromAPI() {
     const data = await response.json();
     console.log("Успешно загружено комментариев:", data.length);
     return data;
-    
 
   } catch (error) {
     console.error("Ошибка при загрузке:", error.message);
@@ -22,27 +21,30 @@ export async function getCommentsFromAPI() {
   }
 }
 
-export async function postCommentToAPI({ name, text }) {
+export async function postCommentToAPI({ name, text, forceError = false }) {
   try {
     console.log("Отправляем новый комментарий...");
+
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json" 
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim(),
         text: text.trim(),
         date: new Date().toISOString(),
         likes: 0,
-        isLiked: false
+        isLiked: false,
+        forceError
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("Ошибка сервера:", errorData);
-      throw new Error("Не удалось отправить комментарий");
+      throw new Error(
+        response.status === 400
+          ? "Имя и текст должны быть не короче 3 символов"
+          : errorData.message || "Ошибка сервера"
+      );
     }
 
     const newComment = await response.json();
