@@ -1,3 +1,5 @@
+const API_URL = "https://686279e496f0cc4e34b9dcf6.mockapi.io/comments-app/comments";
+
 import { comments } from './commentsData.js';
 import { renderComments } from './render.js';
 import { escapeHtml } from './escapeHtml.js';
@@ -34,6 +36,18 @@ export function initHandlers() {
 
   nameInput.value = formState.name;
   textInput.value = formState.text;
+
+function updateButtonState() {
+  addButton.disabled = isSubmitting ||
+    nameInput.value.trim().length === 0 ||
+    textInput.value.trim().length === 0;
+}
+
+function resetForm() {
+  if (nameInput) nameInput.value = '';
+  if (textInput) textInput.value = '';
+  formState = { name: '', text: '' };
+}
 
   function setupEventListeners() {
     const commentsList = document.getElementById('comments-list');
@@ -105,92 +119,123 @@ export function initHandlers() {
   }
 
   async function handleAddComment() {
-    if (isSubmitting) return;
+  if (isSubmitting) return;
 
-    const name = escapeHtml(formState.name.trim());
-    const text = escapeHtml(formState.text.trim());
+  const name = escapeHtml(nameInput.value.trim());
+  const text = escapeHtml(textInput.value.trim());
 
-    if (!validateInput(name, text)) return;
+  if (name.length < 3 || text.length < 3) {
+  alert("Имя и текст должны содержать минимум 3 символа");
+  nameInput.value = name;
+  textInput.value = text;
+  return;
+}
 
-    const formElement = document.querySelector('.add-form');
-    if (!formElement) return;
 
-    const pendingNotice = showNotification('Комментарий добавляется...', 'info');
-
-    formElement.classList.add('hidden');
-    isSubmitting = true;
-
-    const slowNetworkTimer = setTimeout(() => {
-      showNotification('Интернет медленный… Ожидаем публикации', 'warning');
-    }, 3000);
-
-    try {
-      await postCommentToAPI({ name, text, forceError: Math.random() > 0.5 });
-      const updatedComments = await getCommentsFromAPI();
-
-      comments.length = 0;
-      if (Array.isArray(updatedComments)) {
-        updatedComments.forEach(comment => {
-          comments.push({
-            id: comment.id,
-            name: comment.name,
-            date: new Date(comment.date),
-            text: comment.text,
-            likes: comment.likes || 0,
-            isLiked: comment.isLiked || false
-          });
-        });
-      }
-
-      formState = { name: '', text: '' };
-      nameInput.value = '';
-      textInput.value = '';
-
-      showNotification('Комментарий успешно опубликован!', 'success');
-      renderComments(comments);
-
-    } catch (error) {
-      console.error('Ошибка при добавлении комментария:', error);
-      showNotification(error.message || 'Ошибка при отправке комментария', 'error');
-
-      nameInput.value = formState.name;
-      textInput.value = formState.text;
-
-    } finally {
-      clearTimeout(slowNetworkTimer);
-      pendingNotice?.remove();
-
-      setTimeout(() => {
-        isSubmitting = false;
-        updateButtonState();
-        formElement.classList.remove('hidden');
-      }, COMMENT_DELAY_MS);
-    }
+  if (!name || !text) {
+    showNotification('Заполните все поля', 'error');
+    return;
   }
 
+  const formElement = document.querySelector('.add-form');
+  if (!formElement) return;
+
+  const pendingNotice = showNotification('Комментарий добавляется...', 'info');
+  formElement.classList.add('hidden');
+  isSubmitting = true;
+
+  const slowNetworkTimer = setTimeout(() => {
+    showNotification('Интернет медленный… Ожидаем публикации', 'warning');
+  }, 3000);
+
+  try {
+    if (Math.random() < 0.5) {
+    throw new Error("Ошибка сервера. Попробуйте позже");
+  }
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        text,
+        date: new Date().toISOString(),
+        likes: 0,
+        isLiked: false,
+        forceError: Math.random() > 0.5
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      if (response.status === 400) {
+        throw new Error("Имя и текст должны быть не короче 3 символов");
+      }
+
+      if (response.status >= 500) {
+        throw new Error("Ошибка сервера. Попробуйте позже");}
+
+      throw new Error(errorData.message || "Не удалось отправить комментарий");
+
+    }
+
+    const newComment = await response.json();
+    const updatedComments = await getCommentsFromAPI();
+
+    comments.length = 0;
+    updatedComments.forEach(comment => {
+      comments.push({
+        id: comment.id,
+        name: comment.name,
+        date: new Date(comment.date),
+        text: comment.text,
+        likes: comment.likes || 0,
+        isLiked: comment.isLiked || false
+      });
+    });
+
+    showNotification('Комментарий успешно опубликован!', 'success');
+    renderComments(comments);
+    resetForm();
+
+  } catch (error) {
+    console.error('Ошибка при добавлении комментария:', error);
+    alert(error.message || 'Ошибка при отправке комментария', 'error');
+
+    nameInput.value = name;
+    textInput.value = text;
+
+  } finally {
+    clearTimeout(slowNetworkTimer);
+    pendingNotice?.remove();
+
+    setTimeout(() => {
+      isSubmitting = false;
+      updateButtonState();
+      formElement.classList.remove('hidden');
+    }, COMMENT_DELAY_MS);
+  }
+}
+
+
   function validateInput(name, text) {
-    if (!name || !text || name.length < 3 || text.length < 3) {
-      showNotification('Имя и текст должны содержать минимум 3 символа', 'error');
+    if (!name || !text) {
+      showNotification('Заполните все поля', 'error');
       return false;
     }
     return true;
   }
 
   function handleTextInputKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey &&
-        formState.name.trim().length >= 3 &&
-        formState.text.trim().length >= 3) {
+      if (e.key === 'Enter' && !e.shiftKey &&
+        nameInput.value.trim() &&
+        textInput.value.trim()) {
       e.preventDefault();
       handleAddComment();
     }
   }
-
-  function updateButtonState() {
-    addButton.disabled = isSubmitting ||
-                         formState.name.trim().length < 3 ||
-                         formState.text.trim().length < 3;
-  }
-
+  
   setupEventListeners();
   updateButtonState();
 }
