@@ -6,3 +6,7 @@ export function formatDate(date) {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
+
+function pad(value) {
+  return value.toString().padStart(2, '0');
+}
