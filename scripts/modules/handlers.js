@@ -124,14 +124,6 @@ function resetForm() {
   const name = escapeHtml(nameInput.value.trim());
   const text = escapeHtml(textInput.value.trim());
 
-  if (name.length < 3 || text.length < 3) {
-  alert("Имя и текст должны содержать минимум 3 символа");
-  nameInput.value = name;
-  textInput.value = text;
-  return;
-}
-
-
   if (!name || !text) {
     showNotification('Заполните все поля', 'error');
     return;
