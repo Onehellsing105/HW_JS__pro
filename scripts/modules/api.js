@@ -21,13 +21,18 @@ export async function getCommentsFromAPI() {
   }
 }
 
-export async function postCommentToAPI({ name, text, forceError = false }) {
+export async function postCommentToAPI({ name, text, token, forceError = false }) {
   try {
     console.log("Отправляем новый комментарий...");
 
+    const headers = { "Content-Type": "application/json" };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         name: name.trim(),
         text: text.trim(),

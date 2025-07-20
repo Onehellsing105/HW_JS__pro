@@ -1,11 +1,11 @@
 body {
   margin: 0;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   color: #ffffff;
   background: #202020;
 }
 
-.container {
+#app {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,7 +14,7 @@ body {
   box-sizing: border-box;
 }
 
-.comments {
+ul#comments-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -37,22 +37,10 @@ body {
   box-sizing: border-box;
 }
 
-.validation-message {
-  color: red;
-  font-size: 0.9em;
-  margin-top: 4px;
-}
-
-
 .comment-header {
   font-size: 16px;
   display: flex;
   justify-content: space-between;
-}
-
-.comment-footer {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .comment-body {
@@ -64,6 +52,11 @@ body {
   word-break: break-word;
 }
 
+.comment-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .likes {
   display: flex;
   align-items: center;
@@ -72,20 +65,30 @@ body {
 .likes-counter {
   font-size: 26px;
   margin-right: 8px;
+  transition: color 0.3s ease;
 }
 
 .like-button {
   all: unset;
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg width='22' height='20' viewBox='0 0 22 20' fill='none' xmlns='http://www.w3.org/2000/svg' %3E%3Cpath d='M11.11 16.9482L11 17.0572L10.879 16.9482C5.654 12.2507 2.2 9.14441 2.2 5.99455C2.2 3.81471 3.85 2.17984 6.05 2.17984C7.744 2.17984 9.394 3.26975 9.977 4.75204H12.023C12.606 3.26975 14.256 2.17984 15.95 2.17984C18.15 2.17984 19.8 3.81471 19.8 5.99455C19.8 9.14441 16.346 12.2507 11.11 16.9482ZM15.95 0C14.036 0 12.199 0.882834 11 2.26703C9.801 0.882834 7.964 0 6.05 0C2.662 0 0 2.6267 0 5.99455C0 10.1035 3.74 13.4714 9.405 18.5613L11 20L12.595 18.5613C18.26 13.4714 22 10.1035 22 5.99455C22 2.6267 19.338 0 15.95 0Z' fill='%23BCEC30' /%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='22' height='20' viewBox='0 0 22 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11.11 16.9482L11 17.0572L10.879 16.9482C5.654 12.2507 2.2 9.14441 2.2 5.99455C2.2 3.81471 3.85 2.17984 6.05 2.17984C7.744 2.17984 9.394 3.26975 9.977 4.75204H12.023C12.606 3.26975 14.256 2.17984 15.95 2.17984C18.15 2.17984 19.8 3.81471 19.8 5.99455C19.8 9.14441 16.346 12.2507 11.11 16.9482ZM15.95 0C14.036 0 12.199 0.882834 11 2.26703C9.801 0.882834 7.964 0 6.05 0C2.662 0 0 2.6267 0 5.99455C0 10.1035 3.74 13.4714 9.405 18.5613L11 20L12.595 18.5613C18.26 13.4714 22 10.1035 22 5.99455C22 2.6267 19.338 0 15.95 0Z' fill='%23BCEC30' /%3E%3C/svg%3E");
   background-repeat: no-repeat;
   width: 22px;
   height: 22px;
   transition: transform 0.3s ease;
 }
 
-.-active-like {
+.like-button.-active-like {
   background-image: url("data:image/svg+xml,%3Csvg width='22' height='20' viewBox='0 0 22 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15.95 0C14.036 0 12.199 0.882834 11 2.26703C9.801 0.882834 7.964 0 6.05 0C2.662 0 0 2.6267 0 5.99455C0 10.1035 3.74 13.4714 9.405 18.5613L11 20L12.595 18.5613C18.26 13.4714 22 10.1035 22 5.99455C22 2.6267 19.338 0 15.95 0Z' fill='%23BCEC30'/%3E%3C/svg%3E");
+  animation: heartBeat 0.6s ease-in-out;
+}
+
+.like-button:hover {
+  transform: scale(1.1);
+}
+
+.-active-like + .likes-counter {
+  color: #FF0000;
 }
 
 .add-form {
@@ -107,7 +110,7 @@ body {
 .add-form-name,
 .add-form-text {
   font-size: 16px;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   border-radius: 8px;
   border: none;
   box-sizing: border-box;
@@ -124,11 +127,6 @@ body {
   padding: 22px;
   resize: none;
   min-height: 120px;
-}
-
-.add-form-row {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .add-form-button {
@@ -153,10 +151,7 @@ body {
 
 .loader {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.7);
   display: flex;
   flex-direction: column;
@@ -183,41 +178,24 @@ body {
 }
 
 @keyframes heartBeat {
-  0% { transform: scale(1) rotate(0deg); }
-  15% { transform: scale(1.2) rotate(-5deg); }
-  30% { transform: scale(1.2) rotate(5deg); }
-  45% { transform: scale(1.2) rotate(-5deg); }
-  60% { transform: scale(1.2) rotate(5deg); }
-  75% { transform: scale(1.1) rotate(0deg); }
+  0%   { transform: scale(1) rotate(0deg); }
+  15%  { transform: scale(1.2) rotate(-5deg); }
+  30%  { transform: scale(1.2) rotate(5deg); }
+  45%  { transform: scale(1.2) rotate(-5deg); }
+  60%  { transform: scale(1.2) rotate(5deg); }
+  75%  { transform: scale(1.1) rotate(0deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
 
-.like-button.-active-like {
-  background-image: url("data:image/svg+xml,%3Csvg width='22' height='20' viewBox='0 0 22 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15.95 0C14.036 0 12.199 0.882834 11 2.26703C9.801 0.882834 7.964 0 6.05 0C2.662 0 0 2.6267 0 5.99455C0 10.1035 3.74 13.4714 9.405 18.5613L11 20L12.595 18.5613C18.26 13.4714 22 10.1035 22 5.99455C22 2.6267 19.338 0 15.95 0Z' fill='%23FF0000'/%3E%3C/svg%3E");
-  animation: heartBeat 0.6s ease-in-out;
-}
-
-.like-button {
-  transition: transform 0.2s;
-}
-
-.like-button:hover {
-  transform: scale(1.1);
-}
-
-.likes-counter {
-  font-size: 26px;
-  margin-right: 8px;
-  transition: color 0.3s ease;
-}
-
-.-active-like + .likes-counter {
-  color: #FF0000;
-}
-
 @keyframes spin {
-  0% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.validation-message {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 4px;
 }
 
 .notification {
@@ -233,10 +211,11 @@ body {
   font-family: sans-serif;
   transition: opacity 0.3s ease;
 }
-.notification.success { background: #4caf50; }
-.notification.error { background: #f44336; }
-.notification.warning { background: #ff9800; }
-.notification.info    { background: #2196f3; }
+
+.notification.success  { background: #4caf50; }
+.notification.error    { background: #f44336; }
+.notification.warning  { background: #ff9800; }
+.notification.info     { background: #2196f3; }
 
 .notification.visible {
   opacity: 1;
@@ -249,22 +228,18 @@ body {
   flex-shrink: 0;
 }
 
-
 @media (max-width: 650px) {
-  .container {
-    padding: 40px 20px;
+  #app {
+    padding: 40px 20px 200px;
   }
-  
   .comment,
   .add-form {
     width: 100%;
     padding: 30px;
   }
-  
   .comment-text {
     font-size: 24px;
   }
-  
   .add-form-name {
     width: 100%;
   }

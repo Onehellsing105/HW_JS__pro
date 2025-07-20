@@ -1,25 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Проект "Комменты"</title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <title>Лента комментариев</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="container">
-        <ul class="comments" id="comments-list"></ul>
-        <div class="add-form">
-            <input type="text" class="add-form-name" placeholder="Введите ваше имя">
-            <textarea class="add-form-text" placeholder="Введите ваш комментарий" rows="4"></textarea>
-            <div class="add-form-row">
-                <button class="add-form-button">Написать</button>
-            </div>
-        </div>
-    </div>
-    <div id="global-loader" class="loader" style="display: none;">
-  <div class="loader-spinner"></div>
-  <div class="loader-text">Отправка комментария...</div>
-</div>
-    <script src="scripts/main.js" type="module"></script>
+  <div id="app"></div>
+  <script src="scripts/main.js" type="module"></script>
 </body>
 </html>
