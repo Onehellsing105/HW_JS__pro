@@ -1,9 +1,22 @@
-import { renderComments } from './modules/render.js';
-import { initHandlers } from './modules/handlers.js';
-import { comments } from './modules/commentsData.js';
+import { initCommentsData }from './modules/commentsData.js';
+import { renderCommentsPage, renderLoginPage, renderRegisterPage } from './modules/pages.js';
 
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
-  renderComments(comments);
-  initHandlers();
+function router() {
+  switch (window.location.hash) {
+    case '#/login':
+      renderLoginPage();
+      break;
+    case '#/register':
+      renderRegisterPage();
+      break;
+    default:
+      renderCommentsPage();
+  }
+}
+
+window.addEventListener('hashchange', router);
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await initCommentsData();
+  router();                 
 });
