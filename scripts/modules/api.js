@@ -1,4 +1,4 @@
-const API_URL = "https://686279e496f0cc4e34b9dcf6.mockapi.io/comments-app/comments";
+const API_URL = 'https://wedev-api.sky.pro/api/v2/:olennikov-ivan/comments';
 
 export async function getCommentsFromAPI() {
   try {

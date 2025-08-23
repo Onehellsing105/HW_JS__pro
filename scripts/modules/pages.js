@@ -57,24 +57,26 @@ export async function renderCommentsPage() {
 export function renderLoginPage() {
   const app = document.getElementById('app');
   app.innerHTML = `
-    <h2>Вход</h2>
-    <form id="loginForm">
-      <input
-        name="login"
-        type="text"
-        placeholder="Логин"
-        required
-      />
-      <input
-        name="password"
-        type="password"
-        placeholder="Пароль"
-        required
-      />
-      <button type="submit">Войти</button>
-    </form>
-    <p>Нет аккаунта? <a href="#/register">Зарегистрироваться</a></p>
-    <div id="loginError" style="color:red"></div>
+    <div class="auth-container">
+      <h2 class="auth-title">Авторизация</h2>
+      <form id="loginForm" class="auth-form">
+        <input
+          type="text"
+          name="login"
+          class="auth-input"
+          placeholder="Логин"
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          class="auth-input"
+          placeholder="Пароль"
+          required
+        />
+        <button type="submit" class="auth-button">Войти</button>
+      </form>
+    </div>
   `;
 
   document.getElementById('loginForm')
