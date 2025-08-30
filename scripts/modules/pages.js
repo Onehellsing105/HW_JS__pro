@@ -48,6 +48,8 @@ export function renderRegisterPage() {
   initRegisterForm();
 }
 
+
+
 export async function renderCommentsPage() {
   const app  = document.getElementById('app');
   const auth = loadAuth();
