@@ -301,3 +301,13 @@ ul#comments-list {
   transform: scale(1.03);
 }
 
+.auth-register-link {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+.auth-register-link a {
+  color: #4CAF50;
+  text-decoration: underline;
+}
+

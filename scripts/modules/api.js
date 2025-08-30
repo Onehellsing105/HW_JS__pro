@@ -1,63 +1,71 @@
-const API_URL = 'https://wedev-api.sky.pro/api/v2/:olennikov-ivan/comments';
+const BASE_URL = 'https://wedev-api.sky.pro/api/v2/olennikov-ivan/comments';
+const AUTH_URL = `${BASE_URL}/login`;
 
 export async function getCommentsFromAPI() {
   try {
-    console.log("Начинаем загрузку комментариев...");
-    const response = await fetch(API_URL);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Ошибка сервера ${response.status}:`, errorText);
-      throw new Error("Не удалось загрузить комментарии");
+    const res = await fetch(BASE_URL);
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`Ошибка сервера ${res.status}:`, errText);
+      throw new Error('Не удалось загрузить комментарии');
     }
-
-    const data = await response.json();
-    console.log("Успешно загружено комментариев:", data.length);
-    return data;
-
-  } catch (error) {
-    console.error("Ошибка при загрузке:", error.message);
-    throw new Error("Проверьте подключение и попробуйте снова");
+    return await res.json();
+  } catch (err) {
+    console.error('Ошибка при загрузке комментариев:', err.message);
+    throw new Error('Проверьте подключение и попробуйте снова');
   }
 }
 
 export async function postCommentToAPI({ name, text, token, forceError = false }) {
-  try {
-    console.log("Отправляем новый комментарий...");
-
-    const headers = { "Content-Type": "application/json" };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        name: name.trim(),
-        text: text.trim(),
-        date: new Date().toISOString(),
-        likes: 0,
-        isLiked: false,
-        forceError
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        response.status === 400
-          ? "Имя и текст должны быть не короче 3 символов"
-          : errorData.message || "Ошибка сервера"
-      );
-    }
-
-    const newComment = await response.json();
-    console.log("Комментарий успешно добавлен:", newComment);
-    return newComment;
-
-  } catch (error) {
-    console.error("Ошибка при отправке:", error.message);
-    throw new Error("Попробуйте отправить позже");
+  // не указываем Content-Type
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
+
+  // формируем тело запроса как JSON-строку
+  const body = JSON.stringify({
+    name:      name.trim(),
+    text:      text.trim(),
+    forceError
+  });
+
+  console.log('POST /comments body →', body, 'token →', token);
+
+  const res = await fetch(BASE_URL, {
+    method:  'POST',
+    headers,        // только Authorization, если есть
+    body            // JSON-строка без content-type
+  });
+
+  // debug: смотрим, что вернул сервер
+  const raw = await res.text();
+  console.log('Response status:', res.status, 'body →', raw);
+
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    payload = {};
+  }
+
+  if (!res.ok) {
+    throw new Error(payload.message || 'Ошибка сервера');
+  }
+  return payload;
+}
+
+
+
+export async function loginAPI(login, password) {
+  const res = await fetch(AUTH_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ login, password })
+  });
+  if (!res.ok) {
+    const { message } = await res.json().catch(() => ({}));
+    throw new Error(message || 'Ошибка авторизации');
+  }
+  return res.json();
 }

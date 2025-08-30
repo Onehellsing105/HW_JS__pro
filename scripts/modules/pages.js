@@ -1,14 +1,52 @@
+import { initRegisterForm } from './registerComponents.js';
+import { initLoginForm } from './loginComponents.js';
 import { renderComments }      from './render.js';
 import { initHandlers }        from './handlers.js';
-import { comments, initCommentsData } from './commentsData.js';
-import {
-  loadAuth,
-  saveAuth,
-  clearAuth,
-  loadUsers,
-  saveUsers
-}                             from './utils.js';
+import { comments }            from './commentsData.js';
+import { loadAuth, saveAuth, clearAuth } from './auth.js';
 import { showNotification }    from './notifications.js';
+import { getCommentsFromAPI, loginAPI } from './api.js';
+
+export function renderRegisterPage() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="auth-container">
+      <h2 class="auth-title">Регистрация</h2>
+      <form id="registerForm" class="auth-form">
+        <input
+          name="name"
+          type="text"
+          placeholder="Имя"
+          required
+          minlength="3"
+        />
+        <input
+          name="login"
+          type="text"
+          placeholder="Логин"
+          required
+          minlength="3"
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Пароль"
+          required
+          minlength="6"
+        />
+        <button type="submit" class="auth-button">
+          Зарегистрироваться
+        </button>
+        <div id="registerError" class="error"></div>
+      </form>
+      <p class="auth-register-link">
+        Уже есть аккаунт? <a href="#/login">Войти</a>
+      </p>
+    </div>
+  `;
+
+  initRegisterForm();
+}
 
 export async function renderCommentsPage() {
   const app  = document.getElementById('app');
@@ -17,40 +55,56 @@ export async function renderCommentsPage() {
   app.innerHTML = `
     <h2>Лента комментариев</h2>
     <ul id="comments-list"></ul>
-    ${!auth
-      ? `<p>Чтобы добавить комментарий, <a href="#/login">авторизуйтесь</a></p>`
-      : `<form id="commentForm" class="add-form">
-           <input
-             name="name"
-             class="add-form-name"
-             readonly
-             value="${auth.name}"
-           />
-           <textarea
-             name="text"
-             class="add-form-text"
-             placeholder="Введите комментарий"
-             rows="4"
-           ></textarea>
-           <button
-             type="submit"
-             class="add-form-button"
-           >Написать</button>
-         </form>
-         <button id="logoutBtn">Выйти</button>`
+    ${
+      !auth
+        ? `<p>Чтобы добавить комментарий, <a href="#/login">авторизуйтесь</a></p>`
+        : `<form id="commentForm" class="add-form">
+             <input
+               name="name"
+               class="add-form-name"
+               readonly
+               value="${auth.name}"
+             />
+             <textarea
+               name="text"
+               class="add-form-text"
+               placeholder="Введите комментарий"
+               rows="4"
+             ></textarea>
+             <button type="submit" class="add-form-button">
+               Написать
+             </button>
+           </form>
+           <button id="logoutBtn">Выйти</button>`
     }
   `;
+
+  try {
+    const data = await getCommentsFromAPI();
+    comments.splice(
+      0,
+      comments.length,
+      ...data.map(item => ({
+        id:      item.id,
+        name:    item.name,
+        date:    new Date(item.date),
+        text:    item.text,
+        likes:   item.likes || 0,
+        isLiked: item.isLiked || false
+      }))
+    );
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
 
   renderComments(comments);
 
   if (auth) {
     initHandlers();
-
-    document.getElementById('logoutBtn')
-      .addEventListener('click', () => {
-        clearAuth();
-        window.location.hash = '';
-      });
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      clearAuth();
+      window.location.hash = '';
+    });
   }
 }
 
@@ -75,83 +129,32 @@ export function renderLoginPage() {
           required
         />
         <button type="submit" class="auth-button">Войти</button>
+        <p class="auth-register-link">
+          Нет аккаунта? <a href="#/register">Зарегистрироваться</a>
+        </p>
       </form>
+      <div id="loginError" style="color:red"></div>
     </div>
   `;
 
-  document.getElementById('loginForm')
-    .addEventListener('submit', e => {
-      e.preventDefault();
-      const { login, password } = e.target;
-      const users = loadUsers();
-      const user  = users.find(u => u.login === login.value);
+  const form      = document.getElementById('loginForm');
+  const errorElem = document.getElementById('loginError');
 
-      if (!user || user.password !== password.value) {
-        document.getElementById('loginError')
-          .textContent = 'Неверный логин или пароль';
-        return;
-      }
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    errorElem.textContent = '';
+    showNotification('Идёт авторизация...', 'info');
 
-      const token = Date.now().toString();
-      saveAuth({ name: user.name, token });
+    const login    = e.target.login.value.trim();
+    const password = e.target.password.value.trim();
+
+    try {
+      const { token, name } = await loginAPI(login, password);
+      saveAuth({ name, token });
       window.location.hash = '';
-    });
+    } catch (err) {
+      errorElem.textContent = err.message;
+    }
+  });
 }
 
-export function renderRegisterPage() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <h2>Регистрация</h2>
-    <form id="registerForm">
-      <input
-        name="name"
-        type="text"
-        placeholder="Имя"
-        required
-        minlength="3"
-      />
-      <input
-        name="login"
-        type="text"
-        placeholder="Логин"
-        required
-        minlength="3"
-      />
-      <input
-        name="password"
-        type="password"
-        placeholder="Пароль"
-        required
-        minlength="6"
-      />
-      <button type="submit">Зарегистрироваться</button>
-    </form>
-    <p>Уже есть аккаунт? <a href="#/login">Войти</a></p>
-    <div id="registerError" style="color:red"></div>
-  `;
-
-  document.getElementById('registerForm')
-    .addEventListener('submit', e => {
-      e.preventDefault();
-      const { name, login, password } = e.target;
-      const users = loadUsers();
-
-      if (users.some(u => u.login === login.value.trim())) {
-        document.getElementById('registerError')
-          .textContent = 'Логин уже занят';
-        return;
-      }
-
-      const newUser = {
-        name:     name.value.trim(),
-        login:    login.value.trim(),
-        password: password.value
-      };
-      users.push(newUser);
-      saveUsers(users);
-
-      const token = Date.now().toString();
-      saveAuth({ name: newUser.name, token });
-      window.location.hash = '';
-    });
-}
