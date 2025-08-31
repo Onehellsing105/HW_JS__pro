@@ -1,33 +1,31 @@
-import { registerAPI, loginAPI } from './api.js';
-import { saveAuth }              from './auth.js';
-import { showNotification }      from './notifications.js';
+import { registerAPI, getCommentsFromAPI } from './api.js';
+import { saveAuth }                        from './auth.js';
+import { showNotification }                from './notifications.js';
+import { renderComments }                  from './render.js';
 
 export function initRegisterForm() {
-  const form      = document.getElementById('registerForm');
-  const errorElem = document.getElementById('registerError');
+  const form    = document.getElementById('registerForm');
+  const errorEl = document.getElementById('registerError');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    errorElem.textContent = '';
+    errorEl.style.display = 'none';
+    errorEl.textContent   = '';
 
     const name     = form.name.value.trim();
     const login    = form.login.value.trim();
     const password = form.password.value;
 
-    if (name.length < 3 || login.length < 3 || password.length < 6) {
-      errorElem.textContent =
-        'Имя и логин — минимум 3 символа, пароль — минимум 6';
-      return;
-    }
-
     try {
-      await registerAPI({ name, login, password });
-      const authData = await loginAPI(login, password);
-      saveAuth(authData);
+      const user = await registerAPI({ name, login, password });
+      saveAuth({ token: user.token, name: user.name });
+      const comments = await getCommentsFromAPI();
+      renderComments(comments);
       showNotification('Регистрация и вход прошли успешно!', 'success');
       window.location.hash = '#/';
     } catch (err) {
-      errorElem.textContent = err.message;
+      errorEl.style.display = 'block';
+      errorEl.textContent   = err.message;
     }
   });
 }

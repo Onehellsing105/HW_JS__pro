@@ -16,3 +16,13 @@ export function loadAuth() {
 export function clearAuth() {
   localStorage.removeItem(STORAGE_KEY);
 }
+
+export function getToken() {
+  const auth = loadAuth();
+  return auth ? auth.token : null;
+}
+
+export function getUserName() {
+  const auth = loadAuth();
+  return auth ? auth.name : null;
+}
