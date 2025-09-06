@@ -22,15 +22,25 @@ export async function registerAPI({ name, login, password }) {
 
 
 export async function loginAPI(login, password) {
-  const res = await fetch(AUTH_URL, {
+  const body = JSON.stringify({ login, password });
+
+  const res = await fetch('https://wedev-api.sky.pro/api/user/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ login, password })
+    body
   });
-  const text = await res.text();
+
+  const raw = await res.text();
   let data;
-  try { data = JSON.parse(text); } catch { data = {}; }
-  if (!res.ok) throw new Error(data.error || data.message || text);
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    data = {};
+  }
+
+  if (!res.ok) {
+    throw new Error(data.error || data.message || raw);
+  }
+
   return data;
 }
 
